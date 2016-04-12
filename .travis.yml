@@ -1,0 +1,20 @@
+language: python
+python:
+    - "2.7"
+
+sudo: false
+cache:
+    directories:
+        - "~/.platformio"
+
+env:
+    - PLATFORMIO_CI_SRC=src/airduino.ino
+
+install:
+    - pip install -U platformio
+    - platformio lib install 16 31
+    - wget https://github.com/brianlow/Rotary/archive/master.zip -O /tmp/Rotary.zip
+    - unzip /tmp/Rotary.zip -d /tmp
+
+script:
+    - platformio ci --lib="." --lib="/tmp/Rotary-master" --board=megaatmega2560
