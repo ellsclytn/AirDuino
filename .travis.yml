@@ -12,7 +12,7 @@ env:
 
 install:
     - pip install -U platformio
-    - platformio lib install 16 31 275
+    - platformio lib install 16 31 44 78 275
     - wget https://github.com/brianlow/Rotary/archive/master.zip -O /tmp/Rotary.zip
     - unzip /tmp/Rotary.zip -d /tmp
 

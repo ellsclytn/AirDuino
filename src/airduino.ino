@@ -2,6 +2,8 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BMP085_U.h>
 #include <Rotary.h>
+#include <DS3232RTC.h>
+#include <Time.h>
 
 Adafruit_BMP085_Unified bmp = Adafruit_BMP085_Unified(10085);
 Rotary rotation = Rotary(24, 25);
@@ -19,11 +21,18 @@ void setup() {
   pinMode(pinSw, INPUT);
   Serial.begin(9600);
 
+  setSyncProvider(RTC.get);
+  if (timeStatus() != timeSet) {
+    Serial.println("Can't sync to RTC");
+  } else {
+    Serial.println("System time set with RTC");
+  }
+
   if (!bmp.begin()) {
     Serial.print("Ooops, no BMP085 detected ... Check your wiring or I2C ADDR!");
     while(1);
   }
-} 
+}
 
 void loop() {
   // UI Events
@@ -33,9 +42,10 @@ void loop() {
   // Sensor events limited to 1/sec to give UI focus
   if (millis() >= duration + 1000) {
     duration = millis();
+    printTime();
     setBmp();
   }
-} 
+}
 
 void setBmp() {
   sensors_event_t event;
@@ -80,6 +90,26 @@ void handleBtnPress() {
     }
     btnPressedLast = btnPressed;
   }
+}
+
+void printTime() {
+  Serial.print(hour());
+  printDigits(minute());
+  printDigits(second());
+  Serial.print(' ');
+  Serial.print(day());
+  Serial.print(' ');
+  Serial.print(month());
+  Serial.print(' ');
+  Serial.println(year());
+}
+
+void printDigits(int digits) {
+  Serial.print(':');
+  if (digits < 10) {
+    Serial.print('0');
+  }
+  Serial.print(digits);
 }
 
 
