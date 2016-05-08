@@ -1,35 +1,48 @@
-#include <Wire.h>
-#include <Adafruit_Sensor.h>
 #include <Adafruit_BMP085_U.h>
-#include <Rotary.h>
+#include <Adafruit_Sensor.h>
 #include <DS3232RTC.h>
+#include <LiquidCrystal.h>
+#include <Rotary.h>
+#include <SD.h>
+#include <SPI.h>
 #include <Time.h>
+#include <Wire.h>
 
+LiquidCrystal lcd(2, 3, 4, 5, 6 , 7);
 Adafruit_BMP085_Unified bmp = Adafruit_BMP085_Unified(10085);
-Rotary rotation = Rotary(24, 25);
+Rotary rotation = Rotary(9, 10);
 
+File sd;
 boolean btnPressed;
 boolean btnPressedLast;
-const int pinSw = 22;
+const int pinSdCs = 14;
+const int pinSw = 8;
 double multiplier = 1000.00;
 float qnh = 1013.25;
+float temperature = 0.00;
 int altitude;
 int altitudeLast;
 long duration = 0;
 
 void setup() {
   pinMode(pinSw, INPUT);
-  Serial.begin(9600);
+
+  lcd.begin(16, 2);
+  lcd.setCursor(0,0);
 
   setSyncProvider(RTC.get);
   if (timeStatus() != timeSet) {
-    Serial.println("Can't sync to RTC");
-  } else {
-    Serial.println("System time set with RTC");
+    lcd.println("Can't sync RTC  ");
+    while(1);
   }
 
   if (!bmp.begin()) {
-    Serial.print("Ooops, no BMP085 detected ... Check your wiring or I2C ADDR!");
+    lcd.print("No BMP085 found ");
+    while(1);
+  }
+
+  if (!SD.begin(pinSdCs)) {
+    lcd.println("Can't find SD   ");
     while(1);
   }
 }
@@ -44,10 +57,18 @@ void loop() {
     duration = millis();
     printTime();
     setBmp();
+    logToCard();
   }
 }
 
 void setBmp() {
+  bmp.getTemperature(&temperature);
+
+  clearChars(9, 15, 0);
+  lcd.setCursor(9,0);
+  lcd.print(temperature, 1);
+  lcd.print(" C");
+
   sensors_event_t event;
   bmp.getEvent(&event);
 
@@ -58,9 +79,10 @@ void setBmp() {
         event.pressure,
         event.temperature) * 3.2808399) / 10) * 10;
     if (altitude != altitudeLast) {
-      Serial.print("Altitude: ");
-      Serial.print(altitude);
-      Serial.println("ft");
+      clearChars(0, 15, 0);
+      lcd.setCursor(0,0);
+      lcd.print(altitude);
+      lcd.print("ft");
       altitudeLast = altitude;
     }
   }
@@ -71,11 +93,12 @@ void handleRotation() {
   if (result) {
     if (result == DIR_CW) {
       qnh = qnh + multiplier;
-      Serial.println(qnh);
     } else {
       qnh = qnh - multiplier;
-      Serial.println(qnh);
     }
+    clearChars(9, 15, 1);
+    lcd.setCursor(9, 1);
+    lcd.print(qnh);
   }
 }
 
@@ -93,23 +116,29 @@ void handleBtnPress() {
 }
 
 void printTime() {
-  Serial.print(hour());
+  lcd.setCursor(0,1);
+  lcd.print(hour());
   printDigits(minute());
   printDigits(second());
-  Serial.print(' ');
-  Serial.print(day());
-  Serial.print(' ');
-  Serial.print(month());
-  Serial.print(' ');
-  Serial.println(year());
 }
 
 void printDigits(int digits) {
-  Serial.print(':');
+  lcd.print(':');
   if (digits < 10) {
-    Serial.print('0');
+    lcd.print('0');
   }
-  Serial.print(digits);
+  lcd.print(digits);
 }
 
+void clearChars(short fromX, short toX, short row) {
+  for (short i = fromX; i < toX; i++) {
+    lcd.setCursor(i, row);
+    lcd.print(' ');
+  }
+}
 
+void logToCard() {
+  sd = SD.open("logfile.txt", FILE_WRITE);
+  sd.println(millis());
+  sd.close();
+}
