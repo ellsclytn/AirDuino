@@ -12,9 +12,7 @@ env:
 
 install:
     - pip install -U platformio
-    - platformio lib install 16 31 44 78 275
-    - wget https://github.com/brianlow/Rotary/archive/master.zip -O /tmp/Rotary.zip
-    - unzip /tmp/Rotary.zip -d /tmp
+    - platformio lib install 16 31 44 78 161 275
 
 script:
-    - platformio ci --lib="." --lib="/tmp/Rotary-master" --board=megaatmega2560
+    - platformio ci --lib="." --board=nanoatmega328
