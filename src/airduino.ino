@@ -34,7 +34,7 @@ void setup() {
 
   setSyncProvider(RTC.get);
   if (timeStatus() != timeSet) {
-    lcd.println("Can't sync RTC  ");
+    lcd.print("Can't sync RTC  ");
     while(1);
   }
 
@@ -44,7 +44,7 @@ void setup() {
   }
 
   if (!SD.begin(pinSdCs)) {
-    lcd.println("Can't find SD   ");
+    lcd.print("Can't find SD   ");
     while(1);
   }
 
@@ -60,12 +60,13 @@ void loop() {
   if (millis() >= duration + 1000) {
     duration = millis();
     printTime();
-    setBmp();
-    logToCard();
+    getBmp();
+    // getDht();
+    // logToCard();
   }
 }
 
-void setBmp() {
+void getBmp() {
   bmp.getTemperature(&temperature);
 
   clearChars(9, 15, 0);
