@@ -1,5 +1,6 @@
 #include <Adafruit_BMP085_U.h>
 #include <Adafruit_Sensor.h>
+#include <DHT.h>
 #include <DS3232RTC.h>
 #include <LiquidCrystal.h>
 #include <Rotary.h>
@@ -9,6 +10,7 @@
 #include <Wire.h>
 
 LiquidCrystal lcd(2, 3, 4, 5, 6 , 7);
+DHT dht(15, DHT22);
 Adafruit_BMP085_Unified bmp = Adafruit_BMP085_Unified(10085);
 Rotary rotation = Rotary(9, 10);
 
@@ -45,6 +47,8 @@ void setup() {
     lcd.println("Can't find SD   ");
     while(1);
   }
+
+  dht.begin();
 }
 
 void loop() {
@@ -86,6 +90,16 @@ void setBmp() {
       altitudeLast = altitude;
     }
   }
+}
+
+void getDht() {
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+  clearChars(0, 15, 0);
+  lcd.setCursor(0, 0);
+  lcd.print(h);
+  lcd.print(" ");
+  lcd.print(t);
 }
 
 void handleRotation() {
